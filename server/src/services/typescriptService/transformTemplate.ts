@@ -186,7 +186,7 @@ export function getTemplateTransformFunctions(ts: T_TypeScript) {
         const newScope = scope.concat(vOnScope);
         const statements =
           vOnExp.type !== 'VOnExpression'
-            ? [ts.createStatement(parseExpression(vOnExp, code, newScope))]
+            ? [ts.createExpressionStatement(parseExpression(vOnExp, code, newScope))]
             : vOnExp.body.map(st => transformStatement(st, code, newScope));
 
         exp = ts.createFunctionExpression(
@@ -501,10 +501,10 @@ export function getTemplateTransformFunctions(ts: T_TypeScript) {
   function transformStatement(statement: AST.ESLintStatement, code: string, scope: string[]): ts.Statement {
     if (statement.type !== 'ExpressionStatement') {
       console.error('Unexpected statement type:', statement.type);
-      return ts.createStatement(ts.createLiteral(''));
+      return ts.createExpressionStatement(ts.createLiteral(''));
     }
 
-    return ts.createStatement(parseExpression(statement.expression, code, scope));
+    return ts.createExpressionStatement(parseExpression(statement.expression, code, scope));
   }
 
   function transformFilter(filter: AST.VFilterSequenceExpression, code: string, scope: string[]): ts.Expression {
@@ -654,6 +654,12 @@ export function getTemplateTransformFunctions(ts: T_TypeScript) {
       });
 
       res = ts.createTemplateExpression(ts.createTemplateHead(exp.head.text), injectedSpans);
+    } else if (ts.isNewExpression(exp)) {
+      res = ts.createNew(
+        injectThis(exp.expression, scope, start),
+        exp.typeArguments,
+        exp.arguments && exp.arguments.map(arg => injectThis(arg, scope, start))
+      );
     } else {
       /**
        * Because Nodes can have non-virtual positions

@@ -243,8 +243,8 @@ export function injectVueTemplate(
 
   // wrap render code with a function decralation
   // with `this` type of component.
-  const statements = renderBlock.map(exp => tsModule.createStatement(exp));
-  const renderElement = tsModule.createStatement(
+  const statements = renderBlock.map(exp => tsModule.createExpressionStatement(exp));
+  const renderElement = tsModule.createExpressionStatement(
     tsModule.createCall(tsModule.createIdentifier(renderHelperName), undefined, [
       // Reference to the component
       tsModule.createIdentifier('__Component'),
@@ -275,5 +275,5 @@ function getWrapperRangeSetter(
   tsModule: T_TypeScript,
   wrapped: ts.TextRange
 ): <T extends ts.TextRange>(wrapperNode: T) => T {
-  return <T extends ts.TextRange>(wrapperNode: T) => tsModule.setTextRange(wrapperNode, wrapped);
+  return wrapperNode => tsModule.setTextRange(wrapperNode, wrapped);
 }
